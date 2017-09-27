@@ -1,0 +1,110 @@
+﻿@{
+    ViewData["Title"] = "Web App";
+}
+
+<h2>Ping... Status: <span id="status">Stopped</span></h2>
+
+<p>This page pings an API endpoint that connects to the database to write an item and read it back. It is a simple connectivity test.</p>
+
+<div>
+    <button id="start" class="btn btn-primary">Start</button>
+    <button id="stop" class="btn btn-danger" disabled="disabled">Stop</button>
+    <button id="clear" class="btn btn-default">Clear</button>
+</div>
+<div class="frame panel">
+<pre id="output"></pre>
+</div>
+
+<style>
+.frame {
+    height: 200px;
+    overflow: scroll;
+}
+
+.frame::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.frame::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+
+.frame::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+.frame::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+.frame::-webkit-scrollbar-track { 
+    background-color: #fff; 
+    border-radius: 8px; 
+} 
+</style>
+
+@section scripts {
+<script>
+(function ($){
+    var url = '@Url.Action("Ping")';
+    
+    var status = $('#status');
+    var frame = $('.frame')[0];
+    var output = $('#output');
+    var start = $('#start');
+    var stop = $('#stop');
+    var stopping = true;
+
+    var ping = function () {
+        
+        if (stopping) {
+            status.text('Stopped');
+            status.attr('class', null);
+            return;
+        }
+
+        var start = new Date();
+        output.append('ping... ')
+        
+        $.get(url)
+            .done(function () {
+                var end = new Date();
+                output.append('success ' + (end.getTime() - start.getTime()) + 'ms\n');
+                frame.scrollTop = frame.scrollHeight
+                status.text('OK');
+                status.attr('class', 'text-success');
+                setTimeout(ping, 500);
+            })
+            .fail(function () {
+                var end = new Date();
+                output.append('error ' + (end.getTime() - start.getTime()) + 'ms\n');
+                frame.scrollTop = frame.scrollHeight
+                status.text('ERROR');
+                status.attr('class', 'text-danger');
+                setTimeout(ping, 500);
+            });
+    }
+
+    $('#start').click(function () {
+        stop.attr('disabled', null);
+        start.attr('disabled', 'disabled');
+        stopping = false;
+        status.text('Waiting...');
+        status.attr('class', null);
+        setTimeout(ping, 500);
+    });
+
+    $('#stop').click(function () {
+        stop.attr('disabled', 'disabled');
+        start.attr('disabled', null);
+        stopping = true;
+    });
+
+    $('#clear').click(function () {
+        output.text('');
+    });
+})(jQuery);
+</script>
+}
